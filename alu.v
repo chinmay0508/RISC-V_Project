@@ -1,59 +1,46 @@
-module ALU_32bit(
-input [31:0] A,
-input [31:0] B,
-input [2:0] sel,
-input Clock,
-output reg [31:0] Y,
-output reg Zero,
-output reg Cout,
-output reg Borrow
+module rv32_alu(
+    input [31:0] op_1_in,
+    input [31:0] op_2_in,
+    input [3:0]  opcode_in,
+    output reg [31:0] result_out
 );
-reg [31:0] reg1, reg2,ans1;
-reg [2:0] sel_in;
-reg c_out,b_out,zero;
-always @(*)
-begin
-    case (sel_in)
-	    ans1 = 0;
-   	    c_out = 0;
-    	    b_out = 0;
-    	    zero = 0;
-        3'b000: begin
-		{c_out,ans1}=reg1+reg2;
-		b_out=0;
-		end      				//Addition 000
-        3'b001: begin
-            ans1=reg1-reg2;
-            c_out=0;                                  //Subtraction 001
-            b_out= (reg1<reg2)?1:0;end 
-        3'b010: begin ans1=reg1&reg2;c_out=0;b_out=0;end     //bitwise AND
-        3'b011: begin ans1=reg1|reg2;c_out=0;b_out=0;end     //bitwise OR
-        3'b100: begin ans1=reg1^reg2;c_out=0;b_out=0;end     //bitwise XOR
-	3'b101: begin     				     // increment
-    		{c_out, ans1} = reg1 + 1; 
-    		b_out = 0; 
-		end
-	3'b110: begin 					      //decrement
-    		ans1 = reg1 - 1; 
-    		c_out = 0; 
-   		b_out = (reg1 == 0) ? 1 : 0; 
-		end
-        default: begin ans1=0;c_out=0;b_out=0;end 
-    endcase
-    zero=(ans1==0)? 1'b1:1'b0;
-end
-always @(posedge Clock)
-begin
-	reg1<= A;
-	reg2<= B;
-	sel_in<=sel;
-end
-always @(posedge Clock)
-begin
-	Y<= ans1;
-	Zero<= zero;
-	Borrow<=b_out;
-	Cout<= c_out;
-end
+    // Parameters for funct3
+    parameter FUNCT3_ADD  = 3'b000;
+    parameter FUNCT3_SLT  = 3'b010;
+    parameter FUNCT3_SLTU = 3'b011;    
+    parameter FUNCT3_AND  = 3'b111;    
+    parameter FUNCT3_OR   = 3'b110;   
+    parameter FUNCT3_XOR  = 3'b100;    
+    parameter FUNCT3_SLL  = 3'b001;    
+    parameter FUNCT3_SRL  = 3'b101;
 
+    wire signed [31:0] signed_op1 = op_1_in;
+    wire signed [31:0] signed_op2 = op_2_in;
+    
+    // Subtraction logic: if opcode_in[3] is 1, we subtract
+    wire [31:0] sum_result = (opcode_in[3]) ? (op_1_in - op_2_in) : (op_1_in + op_2_in);
+    
+    // Shift logic
+    wire [31:0] sra_result = signed_op1 >>> op_2_in[4:0];
+    wire [31:0] srl_result = op_1_in >> op_2_in[4:0];
+    wire [31:0] shr_result = (opcode_in[3]) ? sra_result : srl_result;
+
+    // Set Less Than logic
+    wire sltu_result = (op_1_in < op_2_in);
+    wire slt_result  = (signed_op1 < signed_op2);
+
+    // Selection of ALU operation
+    always @(*) begin
+        case (opcode_in[2:0])
+            FUNCT3_ADD : result_out = sum_result;
+            FUNCT3_SRL : result_out = shr_result;
+            FUNCT3_OR  : result_out = op_1_in | op_2_in;
+            FUNCT3_AND : result_out = op_1_in & op_2_in;
+            FUNCT3_XOR : result_out = op_1_in ^ op_2_in;
+            FUNCT3_SLT : result_out = {31'b0, slt_result};
+            FUNCT3_SLTU: result_out = {31'b0, sltu_result};
+            FUNCT3_SLL : result_out = op_1_in << op_2_in[4:0];
+            default:     result_out = 32'b0;
+        endcase
+    end
 endmodule
