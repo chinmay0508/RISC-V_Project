@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_registerFile;
+module registerFile_tb;
 
     reg clk;
     reg rst;
@@ -27,8 +27,8 @@ module tb_registerFile;
     always #5 clk = ~clk;
 
     initial begin
-        // ------------------- Test Case -------------------
-        $display("Starting Register File Testbench");
+        $dumpfile("registerFile.vcd");
+        $dumpvars(0, registerFile_tb);
 
         // Initialize
         rst = 1;
@@ -68,9 +68,7 @@ module tb_registerFile;
         #1;
         $display("Read x0 after write attempt: %h", readData1);
 
-        // ------------------- Finish -------------------
-        $display("Register File Testbench Complete");
-        $stop;
+        $finish;
     end
 
 endmodule

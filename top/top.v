@@ -38,4 +38,17 @@ immediateGenerator immediateGenerator(
         .immediate_instr()
     );
 
+//instantiating the Control Unit
+controlUnit controlUnit(
+    input [6:0] opCode,
+    output reg regWrite,
+    output reg ALUsrc,
+    output reg memRead,
+    output reg memWrite,
+    output reg memToReg,
+    output reg branch,
+    output reg jump,
+    output reg [2:0] ALUop
+);
+
 endmodule
