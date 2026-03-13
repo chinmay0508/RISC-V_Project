@@ -1,8 +1,8 @@
 module mux2to1(a,b,y,sel);
-input a;
-input b;
+input [31:0]a;
+input [31:0]b;
 input sel;
-output reg y;
+output reg [31:0]y;
 always @(*)
 begin
     case(sel)

@@ -31,4 +31,8 @@ begin
         registers[rd] <= writeData ;
     end
 end
+always @(posedge clk) begin
+    if (regWrite)
+        $display("WRITE: rd=%d data=%d", rd, writeData);
+end
 endmodule

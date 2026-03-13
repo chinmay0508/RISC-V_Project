@@ -155,4 +155,10 @@ mux2to1 pc_mux(
     .sel(PCsrc),
     .y(pc_next)
 );
+
+always @(posedge clk) 
+begin
+    if(regWrite)
+        $display("PC=%h rd=%0d data=%0d", PC_IM, instr_top[11:7], writeData);
+end
 endmodule
